@@ -1,13 +1,12 @@
 // --- CLASSE MOUTON ---
 class Mouton {
-  constructor(x, y) {
-    this.x = x; 
-    this.y = y;
-    // On garde la consigne 3b : couleur selon position
-    let r = map(x, 0, width, 220, 255);
-    let g = map(y, 0, height, 220, 255);
-    this.c = color(r, g, 255);
-  }
+constructor(x, y) {
+  this.x = x; 
+  this.y = y;
+  this.c = color(random(230, 255), random(230, 255), 255);
+  this.faim = 100; // Le mouton peut manger 100 unités de baobab
+  this.estRassasie = false;
+}
 
   update() { 
     this.x -= 1.5; // Mouvement dirigé (3c)
@@ -15,6 +14,7 @@ class Mouton {
   }
 
   afficher() {
+    
     push();
     translate(this.x, this.y);
     

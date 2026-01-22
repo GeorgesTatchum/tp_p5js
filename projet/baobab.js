@@ -2,8 +2,8 @@
 class Baobab {
   constructor(x, y) {
     this.x = x; this.y = y;
-    this.h = 20; // Hauteur tronc
-    this.f = 30; // Taille feuillage
+    this.h = 50; // Hauteur tronc
+    this.f = 80; // Taille feuillage
   }
   
   pousser() {
@@ -14,9 +14,11 @@ class Baobab {
   }
   
   seFaireManger() {
-    if (this.h > 15) this.h -= 0.5;
-    if (this.f > 25) this.f -= 0.8;
+  if (this.h > 10) {
+    this.h -= 0.2;
+    this.f -= 0.5;
   }
+}
   
   estGeant() { return this.f > 180; }
   

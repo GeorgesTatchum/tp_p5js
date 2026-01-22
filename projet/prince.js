@@ -1,6 +1,6 @@
 // --- CLASSE PETIT PRINCE ---
 class PetitPrince {
-  constructor(x, y) { this.x = x; this.y = y; }
+  constructor(x, y) { this.x = x; this.y = y; this.angleEcharpe = 0; }
   
   afficher() {
     this.angleEcharpe += 0.1; // Vitesse de flottement de l'écharpe

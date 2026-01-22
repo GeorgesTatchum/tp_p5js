@@ -2,14 +2,22 @@
 class Avion {
   constructor(x, y) {
     this.x = x; this.y = y; this.pose = false;
+    this.heliceAngle = 0;
   }
+  
   voler() {
-    if (this.x < 150) {
+    // L'avion avance jusqu'à 20% de la largeur de l'écran
+    if (this.x < width * 0.2) {
       this.x += 2;
-      this.y += 1.5;
-    } else { this.pose = true; }
+      this.y += 1.2;
+      if(this.heliceAngle !== undefined) this.heliceAngle += 0.5;
+    } else { 
+      this.pose = true; 
+    }
   }
+  
   afficher() {
+    this.heliceAngle += 0.5;
     push();
     translate(this.x, this.y);
     
