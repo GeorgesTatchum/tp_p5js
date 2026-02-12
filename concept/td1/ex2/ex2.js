@@ -54,7 +54,7 @@ function touchMoved() {
   return false; // Indispensable pour que le "drag" fonctionne bien sur mobile
 }
 
-function updateCatPosition() {
+function updateCatPosition() { 
   catX = mouseX;
   catY = mouseY;
 }
