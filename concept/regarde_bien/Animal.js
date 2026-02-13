@@ -1,17 +1,36 @@
 class Animal {
-  constructor(x, y, s) {
+  constructor(x, y, s, type, img) {
     this.x = x;
     this.y = y;
     this.s = s; // Taille de référence
+    this.revealed = false; // Indique si l'animal est révélé ou non
+    this.type = type; // Type d'animal (pour l'instant, on n'a que l'ours)
+    this.img = img;
   }
 
   getPosition() {
     return {x: this.x, y: this.y, s: this.s};
   }
 
-  draw() {
+  isTouched(touchX, touchY) {
+    // On définit une zone de collision simplifiée (un cercle imaginaire)
+    // On décale le centre verticalement car (this.x, this.y) est le bas de l'ours
+    let centreCollisionY = this.y - this.s * 0.4; 
+    let d = dist(touchX, touchY, this.x, centreCollisionY);
+    
+    // Si la distance est inférieure à la moitié de la taille de l'ours
+    return d < this.s * 0.5; 
+  }
+
+  reveal() {
+    if (this.revealed) return; // Ne rien faire si déjà révélé
+    this.y = this.y + this.s * 0.7;
+    this.revealed = true;
+  }
+
+  dessinerOurs() {
     push();
-    translate(this.x, this.y);
+    translate(this.x, this.y); // On centre verticalement sur le corps de l'ours
     noStroke();
 
     // --- COULEURS ---
@@ -78,4 +97,16 @@ class Animal {
     
     pop();
   }
+
+  draw() {
+    if(this.type === 'ours') {
+        this.dessinerOurs();
+    } else if (this.img) {
+        push();
+        translate(this.x, this.y);
+        image(this.img, 0, -this.s/2, this.s, this.s);
+      } 
+      pop();
+  }
+    
 }
