@@ -5,6 +5,10 @@ class Animal {
     this.s = s; // Taille de référence
   }
 
+  getPosition() {
+    return {x: this.x, y: this.y, s: this.s};
+  }
+
   draw() {
     push();
     translate(this.x, this.y);
