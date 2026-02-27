@@ -1,24 +1,367 @@
 <!DOCTYPE html>
-<html lang="">
+<html lang="fr">
 
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ex1</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Regarde bien ! — Jeu d'éveil interactif</title>
   <style>
-    body {
-      padding: 0;
+    * {
+      box-sizing: border-box;
       margin: 0;
-      background-color: #1b1b1b;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      color: #333;
+      -webkit-tap-highlight-color: transparent;
+      /* touch-action sur body = auto pour permettre le scroll */
+    }
+
+    /* Bloquer le scroll/zoom SEULEMENT sur le canvas du jeu */
+    #game-container canvas {
+      touch-action: none;
+    }
+
+    header {
+      text-align: center;
+      padding: 20px 10px 10px;
+      color: white;
+    }
+
+    header h1 {
+      font-size: 2.4em;
+      font-family: 'Georgia', serif;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    header p {
+      font-size: 1.1em;
+      opacity: 0.9;
+      margin-top: 4px;
+    }
+
+    /* ===== ZONE DE JEU ===== */
+    #game-wrapper {
+      width: 100%;
+      max-width: 800px;
+      margin: 10px auto 30px auto;
+      overflow: hidden;
+    }
+
+    #game-container {
+      position: relative;
+      width: 800px;
+      height: 600px;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+      transform-origin: top left;
+    }
+
+    #game-container canvas {
+      display: block;
+    }
+
+    /* ===== ÉLÉMENTS UI DU JEU ===== */
+    .game-ui {
+      position: absolute;
+      z-index: 10;
+    }
+
+    .game-btn {
+      padding: 10px 22px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      font-family: 'Segoe UI', sans-serif;
+      transition: transform 0.1s, box-shadow 0.1s;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .game-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 5px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .game-btn:active {
+      transform: translateY(1px);
+    }
+
+    #slider-diff {
+      left: 50%;
+      transform: translateX(-50%);
+      top: 260px;
+      width: 180px;
+      accent-color: #667eea;
+    }
+
+    #btn-timer {
+      left: 50%;
+      transform: translateX(-50%);
+      top: 310px;
+      background: #e8e8e8;
+      color: #555;
+    }
+
+    #btn-start {
+      left: 50%;
+      transform: translateX(-50%);
+      top: 370px;
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: white;
+      font-size: 20px;
+      padding: 14px 40px;
+      border-radius: 12px;
+    }
+
+    #btn-replay {
+      left: 50%;
+      transform: translateX(-50%);
+      top: 390px;
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      color: white;
+      font-size: 18px;
+      padding: 12px 32px;
+      border-radius: 10px;
+    }
+
+    /* ===== SECTIONS INFORMATIVES ===== */
+    .section {
+      max-width: 800px;
+      margin: 0 auto 25px auto;
+      background: white;
+      border-radius: 16px;
+      padding: 28px 32px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .section h2 {
+      color: #4a3b8f;
+      font-family: 'Georgia', serif;
+      margin-bottom: 14px;
+      font-size: 1.5em;
+      border-bottom: 3px solid #667eea;
+      padding-bottom: 8px;
+    }
+
+    .section h3 {
+      margin-top: 16px;
+      margin-bottom: 8px;
+      color: #555;
+    }
+
+    .section p,
+    .section li {
+      line-height: 1.7;
+      font-size: 1.02em;
+    }
+
+    .section ul {
+      margin-left: 22px;
+      margin-top: 6px;
+    }
+
+    .section li {
+      margin-bottom: 5px;
+    }
+
+    /* Grille des niveaux de difficulté */
+    .difficulty-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    .difficulty-card {
+      background: #f8f9fa;
+      padding: 14px;
+      border-radius: 10px;
+      text-align: center;
+      border: 2px solid #e2e8f0;
+    }
+
+    .difficulty-card h4 {
+      margin-bottom: 6px;
+      color: #4a3b8f;
+      font-size: 1.05em;
+    }
+
+    .difficulty-card p {
+      font-size: 0.92em;
+      color: #666;
+    }
+
+    /* Équipe */
+    .team-grid {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+
+    .team-card {
+      text-align: center;
+      background: #f8f9fa;
+      padding: 20px 30px;
+      border-radius: 12px;
+      border: 2px solid #e2e8f0;
+      min-width: 200px;
+    }
+
+    .team-card .emoji {
+      font-size: 3em;
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .team-card .name {
+      font-weight: bold;
+      font-size: 1.1em;
+      color: #4a3b8f;
+    }
+
+    .team-card p {
+      margin-top: 4px;
+      font-size: 0.9em;
+      color: #777;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 0.9em;
+    }
+
+    /* ===== RESPONSIVE MOBILE ===== */
+    @media (max-width: 820px) {
+
+      #game-wrapper {
+        margin: 5px auto 15px auto;
+      }
+
+      #game-container {
+        border-radius: 8px;
+      }
+
+      .section {
+        width: 96%;
+        max-width: 100%;
+      }
+
+      header {
+        padding: 12px 10px 6px;
+      }
+
+      header h1 {
+        font-size: 1.6em;
+      }
+
+      header p {
+        font-size: 0.95em;
+      }
+
+      .difficulty-grid {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
+
+  <!-- p5.js -->
   <script src="../../../p5.min.js"></script>
-  <script src="index.js"></script>
-  <script src="Decor.js"></script>
+
+  <!-- Classes du jeu -->
+  <script src="Confetti.js"></script>
   <script src="Animal.js"></script>
+  <script src="Decor.js"></script>
+  <script src="Jeu.js"></script>
+
+  <!-- Script principal -->
+  <script src="index.js"></script>
 </head>
 
 <body>
+  <header>
+    <h1>🔍 Regarde bien !</h1>
+    <p>Jeu d'éveil interactif — Cherche et Trouve</p>
+  </header>
+
+  <!-- Zone de jeu p5.js -->
+  <div id="game-wrapper">
+    <div id="game-container">
+      <!-- Le canvas sera inséré ici par p5.js -->
+    </div>
+  </div>
+
+  <!-- Règles du jeu -->
+  <section class="section" id="rules">
+    <h2>📋 Règles du jeu</h2>
+    <p>
+      <strong>Regarde bien !</strong> est un jeu de <em>Cherche et Trouve</em> interactif
+      conçu pour les enfants de 3 à 8 ans. L'objectif est de développer l'acuité visuelle
+      et la reconnaissance cognitive à travers une expérience ludique et adaptative.
+    </p>
+
+    <h3>🎯 Comment jouer :</h3>
+    <ul>
+      <li><strong>Observe</strong> l'animal affiché dans le panneau en haut à droite de l'écran.</li>
+      <li><strong>Cherche</strong> cet animal caché dans la scène de forêt.</li>
+      <li><strong>Touche</strong> (ou clique sur) l'animal quand tu l'as repéré !</li>
+      <li>Une animation de confettis 🎊 confirme la bonne réponse.</li>
+      <li>Trouve les <strong>3 animaux</strong> pour gagner la partie !</li>
+    </ul>
+
+    <h3>🎚️ Niveaux de difficulté :</h3>
+    <div class="difficulty-grid">
+      <div class="difficulty-card">
+        <h4>🟢 Débutant</h4>
+        <p>L'animal cible est montré tel quel. Facile à reconnaître pour les plus petits !</p>
+      </div>
+      <div class="difficulty-card">
+        <h4>🟡 Intermédiaire</h4>
+        <p>La cible est affichée avec un changement de taille et d'orientation. Il faut bien observer !</p>
+      </div>
+      <div class="difficulty-card">
+        <h4>🔴 Expert (Ombre)</h4>
+        <p>Seule la silhouette (ombre) de l'animal est montrée. Reconnais sa forme !</p>
+      </div>
+    </div>
+
+    <h3 style="margin-top: 18px;">⏱ Mode Chrono :</h3>
+    <p>
+      Active le chronomètre pour un défi de rapidité ! Tu disposes de <strong>60 secondes</strong>
+      pour trouver tous les animaux cachés. Le score final indique combien tu en as trouvé.
+    </p>
+  </section>
+
+  <!-- Équipe de développement -->
+  <section class="section" id="team">
+    <h2>👥 Équipe de développement</h2>
+    <div class="team-grid">
+      <div class="team-card">
+        <span class="emoji">🧑‍💻</span>
+        <span class="name">TATCHUM Georges</span>
+        <p>Master 2 Informatique — CIM</p>
+      </div>
+      <div class="team-card">
+        <span class="emoji">👩‍💻</span>
+        <span class="name">BLANCHON Marine</span>
+        <p>Master 2 Informatique — CIM</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>Programmation Créative — Master 2 CIM — Université 2026</p>
+  </footer>
 </body>
 
 </html>

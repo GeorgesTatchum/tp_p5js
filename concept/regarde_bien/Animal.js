@@ -1,112 +1,132 @@
+// Classe Animal — représente un animal caché dans la scène
 class Animal {
-  constructor(x, y, s, type, img) {
+  constructor(x, y, s, type) {
     this.x = x;
     this.y = y;
-    this.s = s; // Taille de référence
-    this.revealed = false; // Indique si l'animal est révélé ou non
-    this.type = type; // Type d'animal (pour l'instant, on n'a que l'ours)
-    this.img = img;
+    this.s = s; // Largeur d'affichage
+    this.type = type; // 'herisson', 'lapin', 'racoon'
+    this.found = false;
+
+    // Animation de tremblement (mauvais toucher)
+    this.shakeTimer = 0;
+    this.shakeOffset = 0;
+
+    // Animation de célébration (bon toucher)
+    this.celebrateTimer = 0;
+
+    // Effet de halo lumineux
+    this.glowAlpha = 0;
   }
 
+  // Retourne la position
   getPosition() {
-    return {x: this.x, y: this.y, s: this.s};
+    return { x: this.x, y: this.y, s: this.s };
   }
 
-  isTouched(touchX, touchY) {
-    // On définit une zone de collision simplifiée (un cercle imaginaire)
-    // On décale le centre verticalement car (this.x, this.y) est le bas de l'ours
-    let centreCollisionY = this.y - this.s * 0.4; 
-    let d = dist(touchX, touchY, this.x, centreCollisionY);
-    
-    // Si la distance est inférieure à la moitié de la taille de l'ours
-    return d < this.s * 0.5; 
+  // Teste si un point (tx, ty) touche l'animal
+  isTouched(tx, ty) {
+    let img = images[this.type];
+    if (!img) return false;
+    let ratio = img.height / img.width;
+    let h = this.s * ratio;
+    let cx = this.x;
+    let cy = this.y - h / 2;
+    // Zone de collision généreuse pour le tactile (marge de 75% de la taille)
+    return abs(tx - cx) < this.s * 0.75 && abs(ty - cy) < h * 0.75;
   }
 
+  // Déclenche le tremblement (mauvaise réponse)
+  shake() {
+    this.shakeTimer = 30;
+  }
+
+  // Révèle l'animal (bonne réponse)
   reveal() {
-    if (this.revealed) return; // Ne rien faire si déjà révélé
-    this.y = this.y + this.s * 0.7;
-    this.revealed = true;
+    this.found = true;
+    this.celebrateTimer = 90; // durée de l'animation sprite
+    this.glowAlpha = 255;
   }
 
-  dessinerOurs() {
-    push();
-    translate(this.x, this.y); // On centre verticalement sur le corps de l'ours
-    noStroke();
-
-    // --- COULEURS ---
-    let brunFonce = color(101, 67, 33);
-    let brunClair = color(180, 130, 90);
-
-    // --- PATTES ARRIÈRE ---
-    fill(brunFonce);
-    ellipse(-this.s * 0.25, this.s * 0.1, this.s * 0.3, this.s * 0.4);
-    ellipse(this.s * 0.25, this.s * 0.1, this.s * 0.3, this.s * 0.4);
-
-    // --- CORPS (GROS VENTRE ROND) ---
-    fill(brunFonce);
-    ellipse(0, -this.s * 0.15, this.s * 0.9, this.s * 0.85);
-
-    // --- BRAS ---
-    push();
-    translate(-this.s * 0.45, -this.s * 0.2);
-    rotate(PI / 4);
-    fill(brunFonce);
-    ellipse(0, 0, this.s * 0.2, this.s * 0.3);
-    pop();
-    push();
-    translate(this.s * 0.45, -this.s * 0.2);
-    rotate(-PI / 4); // Ajustez l'angle selon vos besoins
-    ellipse(0, 0, this.s * 0.2, this.s * 0.3);
-    pop();
-
-    // --- OREILLES ---
-    // Oreille externe
-    ellipse(-this.s * 0.3, -this.s * 0.85, this.s * 0.25, this.s * 0.25);
-    ellipse(this.s * 0.3, -this.s * 0.85, this.s * 0.25, this.s * 0.25);
-    // Oreille interne
-    fill(brunClair);
-    ellipse(-this.s * 0.3, -this.s * 0.85, this.s * 0.15, this.s * 0.15);
-    ellipse(this.s * 0.3, -this.s * 0.85, this.s * 0.15, this.s * 0.15);
-
-    // --- TÊTE ---
-    fill(brunFonce);
-    ellipse(0, -this.s * 0.6, this.s * 0.75, this.s * 0.7);
-
-    // --- MUSEAU ---
-    fill(brunClair);
-    ellipse(0, -this.s * 0.52, this.s * 0.35, this.s * 0.3);
-
-    // --- YEUX ---
-    fill(255); // Blanc
-    ellipse(-this.s * 0.15, -this.s * 0.65, this.s * 0.1, this.s * 0.1);
-    ellipse(this.s * 0.15, -this.s * 0.65, this.s * 0.1, this.s * 0.1);
-    fill(0); // Pupille
-    ellipse(-this.s * 0.15, -this.s * 0.65, this.s * 0.04, this.s * 0.04);
-    ellipse(this.s * 0.15, -this.s * 0.65, this.s * 0.04, this.s * 0.04);
-
-    // --- NEZ ET BOUCHE ---
-    fill(0);
-    // Petit nez arrondi (triangle avec bords arrondis simulés par une ellipse)
-    ellipse(0, -this.s * 0.58, this.s * 0.08, this.s * 0.06);
-    
-    // Sourire
-    stroke(0);
-    strokeWeight(2);
-    noFill();
-    arc(0, -this.s * 0.52, this.s * 0.15, this.s * 0.1, 0.2, PI - 0.2);
-    
-    pop();
+  // Mise à jour des animations
+  update() {
+    // Tremblement
+    if (this.shakeTimer > 0) {
+      this.shakeTimer--;
+      this.shakeOffset = sin(this.shakeTimer * 0.8) * 6;
+    } else {
+      this.shakeOffset = 0;
+    }
+    // Célébration
+    if (this.celebrateTimer > 0) {
+      this.celebrateTimer--;
+    }
+    // Halo
+    if (this.glowAlpha > 0) {
+      this.glowAlpha = max(0, this.glowAlpha - 3);
+    }
   }
 
-  draw() {
-    if(this.type === 'ours') {
-        this.dessinerOurs();
-    } else if (this.img) {
-        push();
-        translate(this.x, this.y);
-        image(this.img, 0, -this.s/2, this.s, this.s);
-      } 
-      pop();
+  // Dessine l'animal dans la scène
+  drawInScene(spriteFrame) {
+    this.update();
+
+    push();
+    translate(this.x + this.shakeOffset, this.y);
+    imageMode(CENTER);
+
+    if (this.found && this.celebrateTimer > 0) {
+      // Animation sprite (célébration)
+      let animImg = images[this.type + '_animation'];
+      if (animImg) {
+        let fw = animImg.width / 3;
+        let frame = floor(spriteFrame) % 3;
+        let ratio = animImg.height / fw;
+        let displayW = this.s * 1.2;
+        let displayH = displayW * ratio;
+        image(animImg, 0, -displayH / 2, displayW, displayH, frame * fw, 0, fw, animImg.height);
+      }
+    } else {
+      // Image normale
+      let img = images[this.type];
+      if (img) {
+        let ratio = img.height / img.width;
+        let displayH = this.s * ratio;
+
+        // Halo doré quand trouvé récemment
+        if (this.glowAlpha > 0) {
+          noStroke();
+          fill(255, 223, 0, this.glowAlpha * 0.4);
+          ellipse(0, -displayH / 2, this.s * 1.3, displayH * 1.2);
+        }
+
+        image(img, 0, -displayH / 2, this.s, displayH);
+
+        // Coche verte si trouvé
+        if (this.found) {
+          fill(0, 180, 0, 200);
+          noStroke();
+          circle(this.s * 0.35, -displayH + 8, 22);
+          fill(255);
+          textAlign(CENTER, CENTER);
+          textSize(14);
+          noStroke();
+          text('✓', this.s * 0.35, -displayH + 7);
+        }
+      }
+    }
+
+    // Flash rouge pour mauvais toucher
+    if (this.shakeTimer > 15) {
+      let img = images[this.type];
+      if (img) {
+        let ratio = img.height / img.width;
+        let displayH = this.s * ratio;
+        noStroke();
+        fill(255, 0, 0, 80);
+        ellipse(0, -displayH / 2, this.s, displayH);
+      }
+    }
+
+    pop();
   }
-    
 }
